@@ -28,9 +28,8 @@ def create_launcher():
     """
     info("Creating automatic launcher")
     cwd = os.getcwd()
-    filewrite = open("/usr/local/bin/ptf", "w")
-    filewrite.write('#!/bin/sh\ncd %s\nchmod +x ptf\n./ptf "$@"' % (cwd))
-    filewrite.close()
+    with open("/usr/local/bin/ptf", "w") as filewrite:
+        filewrite.write('#!/bin/sh\ncd %s\nchmod +x ptf\n./ptf "$@"' % (cwd))
     subprocess.Popen("chmod +x /usr/local/bin/ptf", shell=True).wait()
     info("Automatic launcher created")
 
@@ -122,4 +121,4 @@ if __name__ == "__main__":
         error(e)
         print_error("[!] DANGER WILL ROBINSON. DANGER WILL ROBINSON. Error has occurred.")
         print_error("[!] It's not possible its due to my coding skillz, it must be you? :-)")
-        print_error(("[!] Printing that error. Get that error. You get it: [" + str(e) + "]"))
+        print_error(f"[!] Printing that error. Get that error. You get it: [{str(e)}]")

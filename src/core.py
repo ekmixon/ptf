@@ -17,9 +17,26 @@ import sys
 
 # tab completion
 def complete(text, state):
-    a = (glob.glob(text + '*') + [None])[state].replace("__init__.py", "").replace(".py", "").replace("LICENSE", "").replace("README.md", "").replace("config", "").replace("ptf", "").replace("readme", "").replace("src", "").replace("         ", "").replace(".txt","") + "/"
+    a = (glob.glob(f'{text}*') + [None])[state].replace(
+        "__init__.py", ""
+    ).replace(".py", "").replace("LICENSE", "").replace(
+        "README.md", ""
+    ).replace(
+        "config", ""
+    ).replace(
+        "ptf", ""
+    ).replace(
+        "readme", ""
+    ).replace(
+        "src", ""
+    ).replace(
+        "         ", ""
+    ).replace(
+        ".txt", ""
+    ) + "/"
+
     a = a.replace("//", "/")
-    if os.path.isfile(a[:-1] + ".py") or os.path.isfile(a[:-1] + ".txt"): return a[:-1]
+    if os.path.isfile(f"{a[:-1]}.py") or os.path.isfile(f"{a[:-1]}.txt"): return a[:-1]
     else:
         return a
 
@@ -71,10 +88,7 @@ def definepath():
         return os.getcwd()
 
     else:
-        if os.path.isdir("/usr/share/ptf/"):
-            return "/usr/share/ptf/"
-        else:
-            return os.getcwd()
+        return "/usr/share/ptf/" if os.path.isdir("/usr/share/ptf/") else os.getcwd()
 
 # main status calls for print functions
 def print_status(message):
@@ -107,12 +121,12 @@ def set_title(title):
 
 # count all of the modules
 def count_modules():
-    modules_path = definepath() + "/modules/"
+    modules_path = f"{definepath()}/modules/"
     counter = 0
     for path, subdirs, files in os.walk(modules_path):
         for name in files:
             filename = os.path.join(path, name)
-            if not "__init__.py" in filename:
+            if "__init__.py" not in filename:
                 counter = counter + 1
     return counter
 
@@ -146,11 +160,14 @@ banner = bcolors.RED + r"""
 
 banner += bcolors.ENDC + """
 		     The"""
-banner += bcolors.BOLD + """ PenTesters """
+banner += f"""{bcolors.BOLD} PenTesters """
 banner += bcolors.ENDC + """Framework\n\n"""
 
-banner += """        		   """ + bcolors.backBlue + \
-    """Version: %s""" % (grab_version) + bcolors.ENDC + "\n"
+banner += (
+    ("""        		   """ + bcolors.backBlue + f"""Version: {grab_version}""")
+    + bcolors.ENDC
+) + "\n"
+
 
 banner += bcolors.YELLOW + bcolors.BOLD + """		        Codename: """ + \
     bcolors.BLUE + """Toolsmith""" + "\n"
@@ -182,23 +199,27 @@ download from the Internet.\n"""
 
 # check the config file and return value
 def check_config(param):
-    fileopen = open("%s/config/ptf.config" % (definepath()), "r")
+    fileopen = open(f"{definepath()}/config/ptf.config", "r")
     for line in fileopen:
         # if the line starts with the param we want then we are set, otherwise
         # if it starts with a # then ignore
-        if line.startswith(param) != "#":
-            if line.startswith(param):
-                line = line.rstrip()
-                # remove any quotes or single quotes
-                line = line.replace('"', "")
-                line = line.replace("'", "")
-                line = line.split("=")
-                return line[1]
+        if line.startswith(param) != "#" and line.startswith(param):
+            line = line.rstrip()
+            # remove any quotes or single quotes
+            line = line.replace('"', "")
+            line = line.replace("'", "")
+            line = line.split("=")
+            return line[1]
 
 # parser module for module and term
 def module_parser(filename, term):
     # if the file exists
-    if os.path.isfile(filename) and not "install_update_all" in filename and ".py" in filename and not ".pyc" in filename:
+    if (
+        os.path.isfile(filename)
+        and "install_update_all" not in filename
+        and ".py" in filename
+        and ".pyc" not in filename
+    ):
 
         # set a base counter
         counter = 0
@@ -213,7 +234,7 @@ def module_parser(filename, term):
             if line.startswith(term):
                 line = line.replace(term + '="', "")
                 line = line.replace(term + "='", "")
-                line = line.replace(term + "=", "")
+                line = line.replace(f"{term}=", "")
                 if str(line).endswith('"'): line = line[:-1]
                 if str(line).endswith("'"): line = line[:-1]
                 # reflect we hit this and our search term was found
@@ -222,13 +243,20 @@ def module_parser(filename, term):
 
         # if there was no search term identified for the module
         if counter == 0:
-            filename_short = filename.replace(definepath() + "/", "")
+            filename_short = filename.replace(f"{definepath()}/", "")
             filename_short = filename_short.replace(".py", "")
-            if term not in "BYPASS_UPDATE|LAUNCHER|TOOL_DEPEND|X64_LOCATION|install_update_all|FEDORA|OPENBSD|ARCHLINUX":
-                              if filename_short not in "__init__|msfdb.sh|modules/custom_list/list":
-                                        print_error("Warning, module %s was found but contains no %s field." % (filename_short, term))
-                                        print_error("Check the module again for errors and try again.")
-                                        print_error("Module has been removed from the list.")
+            if (
+                term
+                not in "BYPASS_UPDATE|LAUNCHER|TOOL_DEPEND|X64_LOCATION|install_update_all|FEDORA|OPENBSD|ARCHLINUX"
+                and filename_short
+                not in "__init__|msfdb.sh|modules/custom_list/list"
+            ):
+                print_error(
+                    f"Warning, module {filename_short} was found but contains no {term} field."
+                )
+
+                print_error("Check the module again for errors and try again.")
+                print_error("Module has been removed from the list.")
 
             return ""
 
@@ -238,14 +266,129 @@ def module_parser(filename, term):
 
 # help menu for PTF
 def show_help_menu():
-    print(("Available from main prompt: " + bcolors.BOLD + "show modules" + bcolors.ENDC + "," + bcolors.BOLD + " show <module>" +
-           bcolors.ENDC + "," + bcolors.BOLD + " search <name>" + bcolors.ENDC + "," + bcolors.BOLD + " use <module>" + bcolors.ENDC))
-    print(("Inside modules:" + bcolors.BOLD + " show options" + bcolors.ENDC + "," +
-           bcolors.BOLD + " set <option>" + bcolors.ENDC + "," + bcolors.BOLD + "run" + bcolors.ENDC))
-    print(("Additional commands: " + bcolors.BOLD + "back" + bcolors.ENDC + "," + bcolors.BOLD + " help" + bcolors.ENDC + "," +
-           bcolors.BOLD + " ?" + bcolors.ENDC + "," + bcolors.BOLD + " exit" + bcolors.ENDC + "," + bcolors.BOLD + " quit" + bcolors.ENDC))
-    print(("Update or Install: " + bcolors.BOLD + "update" + bcolors.ENDC + "," + bcolors.BOLD + " upgrade" +
-           bcolors.ENDC + "," + bcolors.BOLD + " install" + bcolors.ENDC + "," + bcolors.BOLD + " run" + bcolors.ENDC))
+    print(
+        (
+            (
+                (
+                    (
+                        (
+                            (
+                                (
+                                    (
+                                        (
+                                            f"Available from main prompt: {bcolors.BOLD}show modules{bcolors.ENDC},{bcolors.BOLD} show <module>"
+                                            + bcolors.ENDC
+                                        )
+                                        + ","
+                                    )
+                                    + bcolors.BOLD
+                                )
+                                + " search <name>"
+                            )
+                            + bcolors.ENDC
+                        )
+                        + ","
+                    )
+                    + bcolors.BOLD
+                )
+                + " use <module>"
+            )
+            + bcolors.ENDC
+        )
+    )
+
+    print(
+        (
+            (
+                (
+                    (
+                        (
+                            (
+                                (
+                                    f"Inside modules:{bcolors.BOLD} show options{bcolors.ENDC},"
+                                    + bcolors.BOLD
+                                )
+                                + " set <option>"
+                            )
+                            + bcolors.ENDC
+                        )
+                        + ","
+                    )
+                    + bcolors.BOLD
+                )
+                + "run"
+            )
+            + bcolors.ENDC
+        )
+    )
+
+    print(
+        (
+            (
+                (
+                    (
+                        (
+                            (
+                                (
+                                    (
+                                        (
+                                            (
+                                                (
+                                                    f"Additional commands: {bcolors.BOLD}back{bcolors.ENDC},{bcolors.BOLD} help{bcolors.ENDC},"
+                                                    + bcolors.BOLD
+                                                )
+                                                + " ?"
+                                            )
+                                            + bcolors.ENDC
+                                        )
+                                        + ","
+                                    )
+                                    + bcolors.BOLD
+                                )
+                                + " exit"
+                            )
+                            + bcolors.ENDC
+                        )
+                        + ","
+                    )
+                    + bcolors.BOLD
+                )
+                + " quit"
+            )
+            + bcolors.ENDC
+        )
+    )
+
+    print(
+        (
+            (
+                (
+                    (
+                        (
+                            (
+                                (
+                                    (
+                                        (
+                                            f"Update or Install: {bcolors.BOLD}update{bcolors.ENDC},{bcolors.BOLD} upgrade"
+                                            + bcolors.ENDC
+                                        )
+                                        + ","
+                                    )
+                                    + bcolors.BOLD
+                                )
+                                + " install"
+                            )
+                            + bcolors.ENDC
+                        )
+                        + ","
+                    )
+                    + bcolors.BOLD
+                )
+                + " run"
+            )
+            + bcolors.ENDC
+        )
+    )
 
 # exit message for PTF
 def exit_ptf():
@@ -266,13 +409,7 @@ def profile_os():
     if os.path.isfile("/etc/arch-release"):
         return "ARCHLINUX"
 
-    if os.path.isfile("/etc/fedora-release"):
-        return "FEDORA"
-
-    # will add support for more operating systems later
-    # else use custom
-    else:
-        return "CUSTOM"
+    return "FEDORA" if os.path.isfile("/etc/fedora-release") else "CUSTOM"
 
 # standard log write out
 def logging(log):
@@ -280,15 +417,11 @@ def logging(log):
     logpath = check_config("LOG_PATH=")
     # if the file isn't there, create it
     if not os.path.isfile(logpath):
-        filewrite = open(logpath, "w")
-        filewrite.write("")
-        filewrite.close()
-    # open for append
-    filewrite = open(logpath, "a")
-    # write it out
-    filewrite.write(log)
-    # close the file
-    filewrite.close()
+        with open(logpath, "w") as filewrite:
+            filewrite.write("")
+    with open(logpath, "a") as filewrite:
+        # write it out
+        filewrite.write(log)
 
 # this will install all the proper locations for
 def prep_install():
@@ -323,7 +456,7 @@ def launcher(filename, install_location):
     launcher = module_parser(filename, "LAUNCHER")
 
     # if its optional
-    if launcher == None:
+    if launcher is None:
         launcher = ""
     if launcher != "":
         # create a launcher if it doesn't exist
@@ -337,58 +470,57 @@ def launcher(filename, install_location):
                 launchers = launcher
                 base_launcher = 1
 
-            if os.path.isfile("/usr/local/bin/" + launchers):
-                os.remove("/usr/local/bin/" + launchers)
-            if not os.path.isfile("/usr/local/bin/" + launchers):
+            if os.path.isfile(f"/usr/local/bin/{launchers}"):
+                os.remove(f"/usr/local/bin/{launchers}")
+            if not os.path.isfile(f"/usr/local/bin/{launchers}"):
 
                 # base launcher filename
                 point = ""
 
                 # make sure the actual launcher is there with known filetypes
-                if os.path.isfile(install_location + "/" + launchers):
+                if os.path.isfile(f"{install_location}/{launchers}"):
                     # specific launcher file
-                    point = "./" + launchers
+                    point = f"./{launchers}"
                     file_point = launchers
 
                 # check for Python
-                if os.path.isfile(install_location + "/" + launchers + ".py"):
-                    point = "./" + launchers + ".py"
-                    file_point = launchers + ".py"
+                if os.path.isfile(f"{install_location}/{launchers}.py"):
+                    point = f"./{launchers}.py"
+                    file_point = f"{launchers}.py"
 
                 # check for Ruby
-                if os.path.isfile(install_location + "/" + launchers + ".rb"):
-                    point = "./" + launchers + ".rb"
-                    file_point = launchers + ".rb"
+                if os.path.isfile(f"{install_location}/{launchers}.rb"):
+                    point = f"./{launchers}.rb"
+                    file_point = f"{launchers}.rb"
 
                 # check for Perl - ew Perl. Ew ew ew ew ew ew =)
-                if os.path.isfile(install_location + "/" + launchers + ".pl"):
-                    point = "./" + launchers + ".pl"
-                    file_point = launchers + ".pl"
+                if os.path.isfile(f"{install_location}/{launchers}.pl"):
+                    point = f"./{launchers}.pl"
+                    file_point = f"{launchers}.pl"
 
                 # check for bash
-                if os.path.isfile(install_location + "/" + launchers + ".sh"):
-                    point = "./" + launchers + ".sh"
-                    file_point = launchers + ".sh"
+                if os.path.isfile(f"{install_location}/{launchers}.sh"):
+                    point = f"./{launchers}.sh"
+                    file_point = f"{launchers}.sh"
 
                 # check of executable, then flag wine
-                if os.path.isfile(install_location + "/" + launchers + ".exe"):
-                    point = "wine cmd /c start " + launchers + ".exe"
-                    file_point = launchers + ".exe"
+                if os.path.isfile(f"{install_location}/{launchers}.exe"):
+                    point = f"wine cmd /c start {launchers}.exe"
+                    file_point = f"{launchers}.exe"
 
                 # normal launcher
-                if os.path.isfile(install_location + "/" + launchers):
-                    point = "./" + launchers
+                if os.path.isfile(f"{install_location}/{launchers}"):
+                    point = f"./{launchers}"
                     file_point = launchers
 
                 # if we found filetype
                 if point != "":
-                    filewrite = open("/usr/local/bin/" + launchers, "w")
-                    filewrite.write('#!/bin/sh\n[ -x %s%s ] || chmod +x %s%s\n%s%s "$@"\n' %
-                                    (install_location, file_point, install_location, file_point, install_location, file_point))
-                    filewrite.close()
-                    subprocess.Popen("chmod +x /usr/local/bin/%s" %
-                                     (launchers), shell=True).wait()
-                    msg = "Created automatic launcher, you can run the tool from anywhere by typing: " + launchers
+                    with open(f"/usr/local/bin/{launchers}", "w") as filewrite:
+                        filewrite.write('#!/bin/sh\n[ -x %s%s ] || chmod +x %s%s\n%s%s "$@"\n' %
+                                        (install_location, file_point, install_location, file_point, install_location, file_point))
+                    subprocess.Popen(f"chmod +x /usr/local/bin/{launchers}", shell=True).wait()
+                    msg = f"Created automatic launcher, you can run the tool from anywhere by typing: {launchers}"
+
                     print_status(msg)
                     with open("ptf-output.log","a") as ee:
                         ee.write(msg+"\n")
@@ -406,25 +538,23 @@ def search(term):
     else:
         for dirpath, subdirs, files in os.walk("modules/"):
             for x in files:
-                if x.endswith(".py"):
-                    if not "__init__.py" in x:
-                        path = os.path.join(dirpath, x)
-                        if term in path:
-                            x = x.replace(".py", "")
-                            module_files.append(os.path.join(dirpath, x))
+                if x.endswith(".py") and "__init__.py" not in x:
+                    path = os.path.join(dirpath, x)
+                    if term in path:
+                        x = x.replace(".py", "")
+                        module_files.append(os.path.join(dirpath, x))
 
-                        if not term in path:
-                            data = open(path, "r", encoding="utf-8").readlines()
+                    if term not in path:
+                        data = open(path, "r", encoding="utf-8").readlines()
                             # normally just searched entire file, but we don't
                             # want to search # lines
-                            for line in data:
-                                line = line.rstrip()
-                                if term in line:
-                                    if not line.startswith("#"):
-                                        x = x.replace(".py", "")
-                                        module_files.append(
-                                            os.path.join(dirpath, x))
-                                        break
+                        for line in data:
+                            line = line.rstrip()
+                            if term in line and not line.startswith("#"):
+                                x = x.replace(".py", "")
+                                module_files.append(
+                                    os.path.join(dirpath, x))
+                                break
     if module_files != []:
         print_status("Search results below:")
         for modules in module_files:
@@ -432,7 +562,7 @@ def search(term):
 
     else:
         print_warning("Search found no results.")
-    
+
     return True
 
 
@@ -459,14 +589,13 @@ def check_blank_dir(path):
     if os.path.isdir(path):
         if os.listdir(path) == []:
             print_status("Detected an empty folder, purging and re-checking out...")
-            subprocess.Popen("rm -rf %s" % (path), shell=True).wait()
+            subprocess.Popen(f"rm -rf {path}", shell=True).wait()
 
         # we put a second one in there in case the path was removed from above
-        if os.path.isdir(path):
-            if os.listdir(path) == ['.git', '.gitignore']:
-                print_status(
-                    "Detected an empty folder, purging and re-checking out...")
-                subprocess.Popen("rm -rf %s" % (path), shell=True).wait()
+        if os.path.isdir(path) and os.listdir(path) == ['.git', '.gitignore']:
+            print_status(
+                "Detected an empty folder, purging and re-checking out...")
+            subprocess.Popen(f"rm -rf {path}", shell=True).wait()
 
 # do platform detection on 32 or 64 bit
 def arch():
@@ -477,11 +606,7 @@ def check_kali():
     if os.path.isfile("/etc/apt/sources.list"):
         kali = open("/etc/apt/sources.list", "r")
         kalidata = kali.read()
-        if "kali" in kalidata:
-            return "Kali"
-        # if we aren't running kali
-        else:
-            return "Non-Kali"
+        return "Kali" if "kali" in kalidata else "Non-Kali"
     else:
         print("[!] Not running a Debian variant..")
         return "Non-Kali"

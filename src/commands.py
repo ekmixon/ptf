@@ -17,7 +17,7 @@ def after_commands(command, install_location):
 
         # iterate through commands
         for commands in command:
-            print_status("Sending after command: " + commands)
+            print_status(f"Sending after command: {commands}")
             # change directory if CD in command
             if "cd " in commands:
                 cwd = os.getcwd()

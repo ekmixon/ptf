@@ -8,6 +8,7 @@ and it's internal command line (ptf> )
 This is still under development so do not expect it to work perfectly... yet.
 '''
 
+
 import logging
 from src.core import print_error, bcolors
 import sys
@@ -34,7 +35,7 @@ try:
 	save_to = "ptf-output.log"
 	#save_to = os.environ['HOME']+"/ptf-output.log"
 	if os.path.isfile(save_to):
-		os.system("cat /dev/null > "+save_to)
+		os.system(f"cat /dev/null > {save_to}")
 
 	log = logging.basicConfig(filename=save_to, level=logging.INFO)
 	#log = logging.getLogger("PTF Basic Logger")

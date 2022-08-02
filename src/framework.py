@@ -25,9 +25,7 @@ try: input = raw_input
 except NameError: pass
 
 # If user does not want the awesome banner, do not print it out
-if '-nb' in sys.argv or '--no-banner' in sys.argv:
-    pass
-else:
+if '-nb' not in sys.argv and '--no-banner' not in sys.argv:
     # print the main welcome banner
     print (banner)
 
@@ -41,11 +39,11 @@ arch_modules = ""
 fedora_modules = ""
 openbsd_modules = ""
 
-if check_kali() == "Kali": os_profile = "Kali"
-else: os_profile = profile_os()
+os_profile = "Kali" if check_kali() == "Kali" else profile_os()
+print_status(
+    f"Operating system detected as: {bcolors.BOLD}{os_profile}{bcolors.ENDC}"
+)
 
-
-print_status("Operating system detected as: " + bcolors.BOLD + os_profile + bcolors.ENDC)
 
 # main intro here
 if profile_os() == "DEBIAN":
@@ -72,18 +70,16 @@ def ignore_update_all_module(module):
         if "/*" in check:
             if check[:-1] in module:
                 result = True
-        else:
-            if (os.getcwd() + "/" + check + ".py") == module:
-                result = True
+        elif f"{os.getcwd()}/{check}.py" == module:
+            result = True
     return result
 
 ignore_these = []
 if check_config("IGNORE_THESE_MODULES") is not None:
     ignore_these = check_config("IGNORE_THESE_MODULES").split(",")
-    if ignore_these[0] != "":
-        if ignore_these[0] != '"':
-            print_info("Ignoring the following modules: " +
-                       (", ").join(ignore_these))
+    if ignore_these[0] not in ["", '"']:
+        print_info("Ignoring the following modules: " +
+                   (", ").join(ignore_these))
 
 # ignore modules if they are specified in the ptf.config
 def ignore_module(module):
@@ -92,23 +88,19 @@ def ignore_module(module):
         if "/*" in check:
             if check[:-1] in module:
                 result = True
-        else:
-            if (os.getcwd() + "/" + check + ".py") == module:
-                result = True
+        elif f"{os.getcwd()}/{check}.py" == module:
+            result = True
     if result:
-        print_warning("Ignoring module: " + module)
+        print_warning(f"Ignoring module: {module}")
 
     return result
 
 include_these = []
 if check_config("INCLUDE_ONLY_THESE_MODULES") is not None:
     include_these = check_config("INCLUDE_ONLY_THESE_MODULES").split(",")
-    if include_these[0] != "":
-        if include_these[0] != '"':
-            print_info("Including only the following modules: " +
-                       (", ").join(include_these))
-        else:
-            include_these = []
+    if include_these[0] not in ["", '"']:
+        print_info("Including only the following modules: " +
+                   (", ").join(include_these))
     else:
         include_these = []
 
@@ -122,11 +114,10 @@ def include_module(module):
         if "/*" in check:
             if check[:-1] in module:
                 result = True
-        else:
-            if (os.getcwd() + "/" + check + ".py") == module:
-                result = True
+        elif f"{os.getcwd()}/{check}.py" == module:
+            result = True
     if result:
-        print_status("Including module: " + module)
+        print_status(f"Including module: {module}")
 
     return result
 
@@ -134,9 +125,9 @@ def include_module(module):
 
 
 def show_module():
-    modules_path = os.getcwd() + "/modules/"
+    modules_path = f"{os.getcwd()}/modules/"
     print ("\n")
-    print((bcolors.BOLD + "The PenTesters Framework Modules" + bcolors.ENDC))
+    print(f"{bcolors.BOLD}The PenTesters Framework Modules{bcolors.ENDC}")
     print(("""=================================
 
    """) + (bcolors.BOLD) + ("""Name                                                 Description """) + (bcolors.ENDC) + ("""
@@ -152,9 +143,13 @@ def show_module():
             # join the structure
             filename = os.path.join(path, name)
             # strip un-needed files
-            if not name in ('__init__.py', 'install_update_all.py', 'update_installed.py'):
+            if name not in (
+                '__init__.py',
+                'install_update_all.py',
+                'update_installed.py',
+            ):
                 # shorten it up a little bit
-                filename_short = filename.replace(os.getcwd() + "/", "")
+                filename_short = filename.replace(f"{os.getcwd()}/", "")
                 filename_short = filename_short.replace(".py", "")
                 filename_short = filename_short.replace(".txt", "")
                 filename_short = str(filename_short)
@@ -162,27 +157,40 @@ def show_module():
                 # print the module name
                 if description != None:
                     temp_number = 53 - len(filename_short)
-                    print("   " + filename_short + " " * temp_number + description)
+                    print(f"   {filename_short}" + " " * temp_number + description)
     print("\n")
 
 def show_new_modules():
-    modules_path = os.getcwd() + "/modules/"
+    modules_path = f"{os.getcwd()}/modules/"
     for path, subdirs, files in os.walk(modules_path):
         for name in sorted(files):
             filename = os.path.join(path, name)
-            if not name in ('__init__.py', 'install_update_all.py', 'update_installed.py'):
+            if name not in (
+                '__init__.py',
+                'install_update_all.py',
+                'update_installed.py',
+            ):
                 module = filename_to_module(filename)
                 description = module_parser(filename, "DESCRIPTION")
                 location = module_parser(filename,"INSTALL_LOCATION")
-                if not ((location is None) or (os.path.exists(os.path.join(path.replace("ptf/modules/",""), location)))):
-                    if description != None:
-                        temp_number = 53 - len(module)
-                        print("   " + module + " " * temp_number + description)
+                if (
+                    location is not None
+                    and not (
+                        os.path.exists(
+                            os.path.join(
+                                path.replace("ptf/modules/", ""), location
+                            )
+                        )
+                    )
+                    and description != None
+                ):
+                    temp_number = 53 - len(module)
+                    print(f"   {module}" + " " * temp_number + description)
     print("\n")
 
 # this is here if you need to access to a gitlab with a password for your keyphrase
 def get_password_gitlab():
-    if not 'password_gitlab' in globals():
+    if 'password_gitlab' not in globals():
         global password_gitlab
         password_gitlab = ""
     if password_gitlab == "":
@@ -194,10 +202,10 @@ def discover_module_filename(module):
 
     # is module already a path?
     if '/' in module or any(map(module.__contains__, SPECIAL_MODULE_NAMES)):
-        return definepath() + "/" + module + module_suffix
+        return f"{definepath()}/{module}{module_suffix}"
 
     # find module
-    modules_path = os.getcwd() + "/modules/"
+    modules_path = f"{os.getcwd()}/modules/"
     for path, subdirs, files in os.walk(modules_path):
         for name in sorted(files):
             if name in ('__init__.py', 'install_update_all.py', 'update_installed.py'):
@@ -209,8 +217,8 @@ def discover_module_filename(module):
     raise Exception("module not found")
 
 def filename_to_module(filename):
-    module = filename.replace(os.getcwd() + "/", "").replace(".py","")
-    module = module.replace(os.getcwd() + "/", "").replace(".txt", "")
+    module = filename.replace(f"{os.getcwd()}/", "").replace(".py", "")
+    module = module.replace(f"{os.getcwd()}/", "").replace(".txt", "")
     return str(module)
 
 # this is when a use <module> command is initiated

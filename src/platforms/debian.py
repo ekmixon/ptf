@@ -24,10 +24,15 @@ def base_install_modules(module_name):
     # depends
     if counter == 1:
         for module in modules:
-            command = ("apt-get -q --allow-downgrades --allow-remove-essential --allow-change-held-packages -y install " + module)
-            subprocess.Popen("export DEBIAN_FRONTEND=noninteractive;%s" %
-                             command, shell=True).wait()
+            command = f"apt-get -q --allow-downgrades --allow-remove-essential --allow-change-held-packages -y install {module}"
+
+            subprocess.Popen(
+                f"export DEBIAN_FRONTEND=noninteractive;{command}", shell=True
+            ).wait()
+
     else:
-        command = ("apt-get -q --allow-downgrades --allow-remove-essential --allow-change-held-packages -y install " + modules)
-        subprocess.Popen("export DEBIAN_FRONTEND=noninteractive;%s" %
-                         command, shell=True).wait()
+        command = f"apt-get -q --allow-downgrades --allow-remove-essential --allow-change-held-packages -y install {modules}"
+
+        subprocess.Popen(
+            f"export DEBIAN_FRONTEND=noninteractive;{command}", shell=True
+        ).wait()
